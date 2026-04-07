@@ -3,21 +3,23 @@ import Testing
 @testable import LocalMLXChatCore
 
 struct LocalModelClientTests {
-    @Test func generateUsesPromptBuilderAndReturnsGeneratorText() async throws {
+    @Test func generatePassesPromptToGeneratorAndReturnsText() async throws {
         let directory = try temporaryModelDirectory()
         defer { try? FileManager.default.removeItem(at: directory) }
 
+        let generator = MockGenerator(result: .success("Hello there"))
         let engine = MockEngine(loadResult: .success(MockLoadedModel()))
         let service = LocalModelClient(
             configuration: LocalModelConfiguration(modelPath: directory),
             modelLoader: ModelLoader(engine: engine),
-            promptBuilder: PromptBuilder(),
-            generator: MockGenerator(result: .success("Hello there"))
+            generator: generator
         )
 
         let output = try await service.generate(prompt: "Hi")
+        let recordedPrompts = await generator.recordedPrompts
 
         #expect(output == "Hello there")
+        #expect(recordedPrompts == ["Hi"])
     }
 
     @Test func streamForwardsTextDeltas() async throws {
@@ -33,7 +35,6 @@ struct LocalModelClientTests {
         let service = LocalModelClient(
             configuration: LocalModelConfiguration(modelPath: directory),
             modelLoader: ModelLoader(engine: engine),
-            promptBuilder: PromptBuilder(),
             generator: MockGenerator(streamResult: .success(stream))
         )
 
@@ -60,7 +61,6 @@ struct LocalModelClientTests {
         let service = LocalModelClient(
             configuration: configuration,
             modelLoader: ModelLoader(engine: MockEngine(loadResult: .success(MockLoadedModel()))),
-            promptBuilder: PromptBuilder(),
             generator: MockGenerator(result: .success("unused"))
         )
 
@@ -76,7 +76,6 @@ struct LocalModelClientTests {
         let service = LocalModelClient(
             configuration: LocalModelConfiguration(modelPath: directory),
             modelLoader: ModelLoader(engine: MockEngine(loadResult: .failure(MockFailure.load))),
-            promptBuilder: PromptBuilder(),
             generator: MockGenerator(result: .success("unused"))
         )
 
@@ -94,7 +93,6 @@ struct LocalModelClientTests {
         let service = LocalModelClient(
             configuration: LocalModelConfiguration(modelPath: directory),
             modelLoader: ModelLoader(engine: engine),
-            promptBuilder: PromptBuilder(),
             generator: MockGenerator(result: .success("ok"))
         )
 
@@ -113,7 +111,6 @@ struct LocalModelClientTests {
         let service = LocalModelClient(
             configuration: LocalModelConfiguration(modelPath: directory),
             modelLoader: ModelLoader(engine: MockEngine(loadResult: .success(MockLoadedModel()))),
-            promptBuilder: PromptBuilder(),
             generator: MockGenerator(streamResult: .failure(MockFailure.inference))
         )
 
@@ -146,7 +143,6 @@ struct LocalModelClientTests {
         let service = LocalModelClient(
             configuration: LocalModelConfiguration(modelPath: directory),
             modelLoader: ModelLoader(engine: MockEngine(loadResult: .success(MockLoadedModel()))),
-            promptBuilder: PromptBuilder(),
             generator: MockGenerator(result: .failure(budgetError))
         )
 
@@ -167,7 +163,6 @@ struct LocalModelClientTests {
         let service = LocalModelClient(
             configuration: LocalModelConfiguration(modelPath: directory),
             modelLoader: ModelLoader(engine: MockEngine(loadResult: .success(MockLoadedModel()))),
-            promptBuilder: PromptBuilder(),
             generator: MockGenerator(streamResult: .failure(budgetError))
         )
 
@@ -235,6 +230,7 @@ private struct CountingEngine: ModelEngine {
 private final class MockGenerator: Generating {
     let result: Result<String, Error>
     let streamResult: Result<AsyncThrowingStream<String, Error>, Error>
+    private let promptRecorder = PromptRecorder()
 
     init(
         result: Result<String, Error> = .failure(MockFailure.inference),
@@ -250,7 +246,8 @@ private final class MockGenerator: Generating {
         options: ResolvedGenerationOptions,
         configuration: LocalModelConfiguration
     ) async throws -> String {
-        try result.get()
+        await promptRecorder.record(prompt)
+        return try result.get()
     }
 
     func stream(
@@ -259,7 +256,24 @@ private final class MockGenerator: Generating {
         options: ResolvedGenerationOptions,
         configuration: LocalModelConfiguration
     ) throws -> AsyncThrowingStream<String, Error> {
-        try streamResult.get()
+        Task {
+            await promptRecorder.record(prompt)
+        }
+        return try streamResult.get()
+    }
+
+    var recordedPrompts: [String] {
+        get async {
+            await promptRecorder.prompts
+        }
+    }
+}
+
+private actor PromptRecorder {
+    private(set) var prompts: [String] = []
+
+    func record(_ prompt: String) {
+        prompts.append(prompt)
     }
 }
 
