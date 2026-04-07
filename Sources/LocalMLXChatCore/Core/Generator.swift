@@ -4,13 +4,13 @@ protocol Generating: Sendable {
     func generate(
         using model: any LoadedModel,
         prompt: String,
-        options: ResolvedGenerationOptions,
+        options: EffectiveGenerationOptions,
         configuration: LocalModelConfiguration
     ) async throws -> String
     func stream(
         using model: any LoadedModel,
         prompt: String,
-        options: ResolvedGenerationOptions,
+        options: EffectiveGenerationOptions,
         configuration: LocalModelConfiguration
     ) throws -> AsyncThrowingStream<String, Error>
 }

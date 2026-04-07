@@ -4,7 +4,7 @@ actor ModelStore {
     private var cachedModel: (any LoadedModel)?
     private var inFlightLoad: Task<any LoadedModel, Error>?
 
-    func model(configuration: LocalModelConfiguration, loader: ModelLoader) async throws -> any LoadedModel {
+    func model(configuration: LocalModelConfiguration, repository: ModelRepository) async throws -> any LoadedModel {
         if let cachedModel {
             return cachedModel
         }
@@ -13,7 +13,7 @@ actor ModelStore {
         }
 
         let loadTask = Task {
-            try await loader.loadModel(using: configuration)
+            try await repository.loadModel(using: configuration)
         }
         inFlightLoad = loadTask
 
