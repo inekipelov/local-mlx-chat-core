@@ -22,7 +22,7 @@ struct MLXGenerator: Generating {
     func generate(
         using model: any LoadedModel,
         prompt: String,
-        options: ResolvedGenerationOptions,
+        options: EffectiveGenerationOptions,
         configuration: LocalModelConfiguration
     ) async throws -> String {
         let stream = try stream(using: model, prompt: prompt, options: options, configuration: configuration)
@@ -36,7 +36,7 @@ struct MLXGenerator: Generating {
     func stream(
         using model: any LoadedModel,
         prompt: String,
-        options: ResolvedGenerationOptions,
+        options: EffectiveGenerationOptions,
         configuration: LocalModelConfiguration
     ) throws -> AsyncThrowingStream<String, Error> {
         guard let model = model as? MLXLoadedModel else {
@@ -80,7 +80,7 @@ struct MLXGenerator: Generating {
 
     private func preparedInput(
         for prompt: String,
-        options: ResolvedGenerationOptions,
+        options: EffectiveGenerationOptions,
         configuration: LocalModelConfiguration,
         model: MLXLoadedModel
     ) async throws -> LMInput {
