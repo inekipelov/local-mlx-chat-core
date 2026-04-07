@@ -7,7 +7,7 @@ Reusable Swift Package for local on-device text generation with Apple MLX.
 <p align="center">
   <a href="https://swift.org"><img src="https://img.shields.io/badge/Swift-6.1+-F05138?logo=swift&logoColor=white" alt="Swift 6.1+"></a>
   <a href="https://developer.apple.com/macos/"><img src="https://img.shields.io/badge/macOS-14.0+-000000?logo=apple" alt="macOS 14.0+"></a>
-  <a href="https://developer.apple.com/xcode/"><img src="https://img.shields.io/badge/Xcode-16+-147EFB?logo=xcode&logoColor=white" alt="Xcode 16+"></a>
+  <a href="https://developer.apple.com/xcode/"><img src="https://img.shields.io/badge/Xcode-16.4+-147EFB?logo=xcode&logoColor=white" alt="Xcode 16.4+"></a>
   <a href="https://developer.apple.com/apple-silicon/"><img src="https://img.shields.io/badge/Apple%20Silicon-Required-000000?logo=apple" alt="Apple Silicon required"></a>
   <a href="#installation"><img src="https://img.shields.io/badge/MLX%20Model-Installation%20Guide-5C2D91" alt="Local MLX-compatible model directory required"></a>
 </p>
