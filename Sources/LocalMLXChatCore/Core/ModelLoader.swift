@@ -6,7 +6,7 @@ protocol ModelEngine: Sendable {
     func loadModel(at path: URL) async throws -> any LoadedModel
 }
 
-struct ModelLoader: Sendable {
+struct ModelRepository: Sendable {
     private let engine: any ModelEngine
 
     init(engine: any ModelEngine = MLXModelEngine()) {

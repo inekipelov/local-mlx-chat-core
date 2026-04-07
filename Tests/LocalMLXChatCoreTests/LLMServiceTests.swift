@@ -11,7 +11,7 @@ struct LocalModelClientTests {
         let engine = MockEngine(loadResult: .success(MockLoadedModel()))
         let service = LocalModelClient(
             configuration: LocalModelConfiguration(modelPath: directory),
-            modelLoader: ModelLoader(engine: engine),
+            modelRepository: ModelRepository(engine: engine),
             generator: generator
         )
 
@@ -34,7 +34,7 @@ struct LocalModelClientTests {
         }
         let service = LocalModelClient(
             configuration: LocalModelConfiguration(modelPath: directory),
-            modelLoader: ModelLoader(engine: engine),
+            modelRepository: ModelRepository(engine: engine),
             generator: MockGenerator(streamResult: .success(stream))
         )
 
@@ -60,7 +60,7 @@ struct LocalModelClientTests {
         let configuration = LocalModelConfiguration(modelPath: URL(filePath: "/tmp/definitely-missing-model"))
         let service = LocalModelClient(
             configuration: configuration,
-            modelLoader: ModelLoader(engine: MockEngine(loadResult: .success(MockLoadedModel()))),
+            modelRepository: ModelRepository(engine: MockEngine(loadResult: .success(MockLoadedModel()))),
             generator: MockGenerator(result: .success("unused"))
         )
 
@@ -75,7 +75,7 @@ struct LocalModelClientTests {
 
         let service = LocalModelClient(
             configuration: LocalModelConfiguration(modelPath: directory),
-            modelLoader: ModelLoader(engine: MockEngine(loadResult: .failure(MockFailure.load))),
+            modelRepository: ModelRepository(engine: MockEngine(loadResult: .failure(MockFailure.load))),
             generator: MockGenerator(result: .success("unused"))
         )
 
@@ -92,7 +92,7 @@ struct LocalModelClientTests {
         let engine = CountingEngine(counter: counter, loadedModel: MockLoadedModel())
         let service = LocalModelClient(
             configuration: LocalModelConfiguration(modelPath: directory),
-            modelLoader: ModelLoader(engine: engine),
+            modelRepository: ModelRepository(engine: engine),
             generator: MockGenerator(result: .success("ok"))
         )
 
@@ -110,7 +110,7 @@ struct LocalModelClientTests {
 
         let service = LocalModelClient(
             configuration: LocalModelConfiguration(modelPath: directory),
-            modelLoader: ModelLoader(engine: MockEngine(loadResult: .success(MockLoadedModel()))),
+            modelRepository: ModelRepository(engine: MockEngine(loadResult: .success(MockLoadedModel()))),
             generator: MockGenerator(streamResult: .failure(MockFailure.inference))
         )
 
@@ -142,7 +142,7 @@ struct LocalModelClientTests {
         )
         let service = LocalModelClient(
             configuration: LocalModelConfiguration(modelPath: directory),
-            modelLoader: ModelLoader(engine: MockEngine(loadResult: .success(MockLoadedModel()))),
+            modelRepository: ModelRepository(engine: MockEngine(loadResult: .success(MockLoadedModel()))),
             generator: MockGenerator(result: .failure(budgetError))
         )
 
@@ -162,7 +162,7 @@ struct LocalModelClientTests {
         )
         let service = LocalModelClient(
             configuration: LocalModelConfiguration(modelPath: directory),
-            modelLoader: ModelLoader(engine: MockEngine(loadResult: .success(MockLoadedModel()))),
+            modelRepository: ModelRepository(engine: MockEngine(loadResult: .success(MockLoadedModel()))),
             generator: MockGenerator(streamResult: .failure(budgetError))
         )
 

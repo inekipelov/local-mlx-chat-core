@@ -2,32 +2,32 @@ import Foundation
 
 public final class LocalModelClient: Sendable {
     private let configuration: LocalModelConfiguration
-    private let modelLoader: ModelLoader
+    private let modelRepository: ModelRepository
     private let generator: any Generating
     private let modelStore: ModelStore
 
     public init(configuration: LocalModelConfiguration) {
         self.configuration = configuration
-        self.modelLoader = ModelLoader()
+        self.modelRepository = ModelRepository()
         self.generator = MLXGenerator()
         self.modelStore = ModelStore()
     }
 
     init(
         configuration: LocalModelConfiguration,
-        modelLoader: ModelLoader,
+        modelRepository: ModelRepository,
         generator: any Generating,
         modelStore: ModelStore = ModelStore()
     ) {
         self.configuration = configuration
-        self.modelLoader = modelLoader
+        self.modelRepository = modelRepository
         self.generator = generator
         self.modelStore = modelStore
     }
 
     public func generate(prompt: String, options: GenerationOptions? = nil) async throws -> String {
         let resolvedOptions = (options ?? GenerationOptions()).resolved(using: configuration)
-        let model = try await modelStore.model(configuration: configuration, loader: modelLoader)
+        let model = try await modelStore.model(configuration: configuration, repository: modelRepository)
 
         do {
             return try await generator.generate(
@@ -45,13 +45,13 @@ public final class LocalModelClient: Sendable {
         let resolvedOptions = (options ?? GenerationOptions()).resolved(using: configuration)
         let modelStore = self.modelStore
         let configuration = self.configuration
-        let modelLoader = self.modelLoader
+        let modelRepository = self.modelRepository
         let generator = self.generator
 
         return AsyncStream { continuation in
             let task = Task {
                 do {
-                    let model = try await modelStore.model(configuration: configuration, loader: modelLoader)
+                    let model = try await modelStore.model(configuration: configuration, repository: modelRepository)
                     let stream = try generator.stream(
                         using: model,
                         prompt: prompt,
