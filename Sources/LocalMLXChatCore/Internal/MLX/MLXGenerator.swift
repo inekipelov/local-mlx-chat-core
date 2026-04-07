@@ -1,7 +1,6 @@
 import Foundation
 import MLX
 import MLXLMCommon
-import MLXLMTokenizers
 
 struct MLXLoadedModel: LoadedModel {
     let container: ModelContainer
@@ -10,7 +9,7 @@ struct MLXLoadedModel: LoadedModel {
 
 struct MLXModelEngine: ModelEngine {
     func loadModel(at path: URL) async throws -> any LoadedModel {
-        let container = try await loadModelContainer(from: path)
+        let container = try await MLXLMCommon.loadModelContainer(directory: path)
         return MLXLoadedModel(container: container, modelDirectory: path)
     }
 }
