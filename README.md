@@ -22,13 +22,7 @@ import LocalMLXChatCore
 // App code: point to a local MLX-compatible model directory.
 let configuration = LocalModelConfiguration(
     modelPath: URL(filePath: "/Users/you/Models/Llama-3.2-1B-Instruct-4bit"),
-    contextWindowOverride: nil,
-    defaultGenerationOptions: GenerationOptions(
-        maxTokens: 256,
-        temperature: 0.7,
-        topP: 0.95,
-        seed: 7
-    )
+    generationPreset: .balanced
 )
 
 // App code: create the service once.
@@ -64,7 +58,8 @@ print()
 | Type | Purpose |
 | --- | --- |
 | `LocalModelClient` | Main entry point for one-shot and streaming generation |
-| `LocalModelConfiguration` | Defines the local model path and default generation settings |
+| `LocalModelConfiguration` | Defines the local model path and default generation preset |
+| `GenerationPreset` | Curated built-in presets for common generation setups |
 | `GenerationOptions` | Overrides generation settings per request |
 | `LocalModelError` | Structured app-facing error surface |
 
@@ -80,11 +75,19 @@ print()
 | Field | Meaning |
 | --- | --- |
 | `modelPath` | Local filesystem path to the MLX model directory |
-| `contextWindowOverride` | Optional manual context-window limit when model metadata is missing or unreliable |
+| `generationPreset` | Built-in default setup used when a request does not provide explicit overrides |
 | `maxTokens` | Maximum number of generated tokens |
 | `temperature` | Sampling temperature |
 | `topP` | Nucleus sampling value |
 | `seed` | Optional deterministic seed for repeatable sampling |
+
+### Presets
+
+| Preset | Intended use | Settings |
+| --- | --- | --- |
+| `fast` | Lower latency and shorter answers | `maxTokens: 128`, `temperature: 0.6`, `topP: 0.9` |
+| `balanced` | Default general-purpose setup | `maxTokens: 256`, `temperature: 0.7`, `topP: 0.95` |
+| `precise` | Lower-variance answers when consistency matters | `maxTokens: 256`, `temperature: 0.2`, `topP: 0.9` |
 
 ## Errors
 
@@ -127,9 +130,13 @@ That directory should include the files expected by `mlx-swift-lm`, typically in
 - model config files
 - generation/chat template metadata when provided by the model package
 
-`LocalMLXChatCore` performs a best-effort context-window validation before generation. It uses `config.json` metadata when available and falls back to `contextWindowOverride` when you need to supply a manual limit.
+`LocalMLXChatCore` performs a best-effort context-window validation before generation. It uses `config.json` metadata when available and skips preflight context validation when the model metadata does not expose a usable limit.
 
 The package also applies a built-in internal truthfulness instruction layer before inference to reduce made-up factual answers without changing the public API.
+
+## Migration Note
+
+This release switches setup to preset-first configuration. `LocalModelConfiguration` now takes `generationPreset` and no longer exposes `contextWindowOverride` or `defaultGenerationOptions`.
 
 ## Manual Verification
 

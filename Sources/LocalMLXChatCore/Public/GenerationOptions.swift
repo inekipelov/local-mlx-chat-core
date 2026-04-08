@@ -2,7 +2,7 @@ import Foundation
 
 /// Optional per-request generation overrides.
 ///
-/// Any property left as `nil` inherits its value from ``LocalModelConfiguration/defaultGenerationOptions``.
+/// Any property left as `nil` inherits its value from ``LocalModelConfiguration/generationPreset``.
 public struct GenerationOptions: Sendable, Equatable {
     /// The maximum number of tokens to generate.
     public var maxTokens: Int?
@@ -33,11 +33,13 @@ public struct GenerationOptions: Sendable, Equatable {
     }
 
     func resolved(using configuration: LocalModelConfiguration) -> EffectiveGenerationOptions {
-        EffectiveGenerationOptions(
-            maxTokens: maxTokens ?? configuration.defaultGenerationOptions.maxTokens ?? 256,
-            temperature: temperature ?? configuration.defaultGenerationOptions.temperature ?? 0.7,
-            topP: topP ?? configuration.defaultGenerationOptions.topP ?? 1.0,
-            seed: seed ?? configuration.defaultGenerationOptions.seed
+        let presetOptions = configuration.generationPreset.options
+
+        return EffectiveGenerationOptions(
+            maxTokens: maxTokens ?? presetOptions.maxTokens ?? 256,
+            temperature: temperature ?? presetOptions.temperature ?? 0.7,
+            topP: topP ?? presetOptions.topP ?? 0.95,
+            seed: seed ?? presetOptions.seed
         )
     }
 }
