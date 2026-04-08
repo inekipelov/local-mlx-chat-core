@@ -129,6 +129,8 @@ That directory should include the files expected by `mlx-swift-lm`, typically in
 
 `LocalMLXChatCore` performs a best-effort context-window validation before generation. It uses `config.json` metadata when available and falls back to `contextWindowOverride` when you need to supply a manual limit.
 
+The package also applies a built-in internal truthfulness instruction layer before inference to reduce made-up factual answers without changing the public API.
+
 ## Manual Verification
 
 A simple smoke test for a host app:

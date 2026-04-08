@@ -19,7 +19,7 @@ struct LocalModelClientTests {
         let recordedPrompts = await generator.recordedPrompts
 
         #expect(output == "Hello there")
-        #expect(recordedPrompts == ["Hi"])
+        #expect(recordedPrompts == [TruthfulnessPromptBuilder().compose(userPrompt: "Hi")])
     }
 
     @Test func streamForwardsTextDeltas() async throws {
@@ -54,6 +54,29 @@ struct LocalModelClientTests {
 
         #expect(chunks == ["Hel", "lo"])
         #expect(sawFinished)
+    }
+
+    @Test func streamWrapsPromptBeforeForwardingToGenerator() async throws {
+        let directory = try temporaryModelDirectory()
+        defer { try? FileManager.default.removeItem(at: directory) }
+
+        let generator = MockGenerator(
+            streamResult: .success(
+                AsyncThrowingStream<String, Error> { continuation in
+                    continuation.finish()
+                }
+            )
+        )
+        let service = LocalModelClient(
+            configuration: LocalModelConfiguration(modelPath: directory),
+            modelRepository: ModelRepository(engine: MockEngine(loadResult: .success(MockLoadedModel()))),
+            generator: generator
+        )
+
+        for await _ in service.stream(prompt: "Need facts only") {}
+
+        let recordedPrompts = await generator.recordedPrompts
+        #expect(recordedPrompts == [TruthfulnessPromptBuilder().compose(userPrompt: "Need facts only")])
     }
 
     @Test func invalidModelPathMapsToStructuredError() async {
