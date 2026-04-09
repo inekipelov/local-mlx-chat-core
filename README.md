@@ -105,7 +105,7 @@ print()
 Add the package to your app's `Package.swift`:
 
 ```swift
-.package(url: "https://github.com/your-org/local-mlx-chat-core", from: "0.1.0")
+.package(url: "https://github.com/your-org/local-mlx-chat-core", from: "0.2.0")
 ```
 
 Then add the product to your target:
@@ -137,6 +137,10 @@ The package also applies a built-in internal truthfulness instruction layer befo
 ## Migration Note
 
 This release switches setup to preset-first configuration. `LocalModelConfiguration` now takes `generationPreset` and no longer exposes `contextWindowOverride` or `defaultGenerationOptions`.
+
+## Version 0.2.0
+
+Version `0.2.0` includes the preset-first generation setup, the built-in truthfulness prompt layer, and metadata-only best-effort context-window validation.
 
 ## Manual Verification
 
