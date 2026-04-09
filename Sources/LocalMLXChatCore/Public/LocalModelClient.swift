@@ -13,7 +13,7 @@ public final class LocalModelClient: Sendable {
     public init(configuration: LocalModelConfiguration) {
         self.configuration = configuration
         self.modelRepository = ModelRepository()
-        self.generator = MLXGenerator()
+        self.generator = TruthfulnessPromptingGenerator(base: MLXGenerator())
         self.modelStore = ModelStore()
     }
 
@@ -25,7 +25,7 @@ public final class LocalModelClient: Sendable {
     ) {
         self.configuration = configuration
         self.modelRepository = modelRepository
-        self.generator = generator
+        self.generator = TruthfulnessPromptingGenerator(base: generator)
         self.modelStore = modelStore
     }
 

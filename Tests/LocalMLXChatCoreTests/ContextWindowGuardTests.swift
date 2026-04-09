@@ -3,22 +3,6 @@ import Testing
 @testable import LocalMLXChatCore
 
 struct ContextWindowGuardTests {
-    @Test func contextWindowOverrideWinsOverMetadata() throws {
-        let directory = try temporaryModelDirectory()
-        defer { try? FileManager.default.removeItem(at: directory) }
-        try writeConfig(["max_position_embeddings": 4096], to: directory)
-
-        let configuration = LocalModelConfiguration(
-            modelPath: directory,
-            contextWindowOverride: 2048
-        )
-        let reader = ContextWindowMetadataReader()
-
-        let limit = reader.effectiveContextWindow(for: configuration, modelDirectory: directory)
-
-        #expect(limit == 2048)
-    }
-
     @Test func metadataReaderLoadsMaxPositionEmbeddingsFromConfig() throws {
         let directory = try temporaryModelDirectory()
         defer { try? FileManager.default.removeItem(at: directory) }
@@ -36,10 +20,9 @@ struct ContextWindowGuardTests {
         defer { try? FileManager.default.removeItem(at: directory) }
         try writeConfig(["model_type": "llama"], to: directory)
 
-        let configuration = LocalModelConfiguration(modelPath: directory)
         let reader = ContextWindowMetadataReader()
 
-        let limit = reader.effectiveContextWindow(for: configuration, modelDirectory: directory)
+        let limit = reader.effectiveContextWindow(modelDirectory: directory)
 
         #expect(limit == nil)
     }

@@ -85,10 +85,7 @@ struct MLXGenerator: Generating {
     ) async throws -> LMInput {
         let input = UserInput(prompt: prompt)
         let prepared = try await model.container.prepare(input: input)
-        let availableContextWindow = metadataReader.effectiveContextWindow(
-            for: configuration,
-            modelDirectory: model.modelDirectory
-        )
+        let availableContextWindow = metadataReader.effectiveContextWindow(modelDirectory: model.modelDirectory)
 
         try tokenBudgetValidator.validate(
             promptTokenCount: prepared.text.tokens.size,

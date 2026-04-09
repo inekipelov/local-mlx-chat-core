@@ -1,11 +1,7 @@
 import Foundation
 
 struct ContextWindowMetadataReader: Sendable {
-    func effectiveContextWindow(for configuration: LocalModelConfiguration, modelDirectory: URL) -> Int? {
-        if let override = configuration.contextWindowOverride {
-            return override
-        }
-
+    func effectiveContextWindow(modelDirectory: URL) -> Int? {
         return maxPositionEmbeddings(from: modelDirectory)
     }
 

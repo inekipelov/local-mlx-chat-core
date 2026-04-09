@@ -3,12 +3,18 @@ import Testing
 @testable import LocalMLXChatCore
 
 struct GenerationOptionsTests {
-    @Test func resolvedOptionsPreferCallOverrides() {
+    @Test func generationPresetsExposeConcreteOptions() {
+        #expect(GenerationPreset.fast.options == GenerationOptions(maxTokens: 128, temperature: 0.6, topP: 0.9, seed: nil))
+        #expect(GenerationPreset.balanced.options == GenerationOptions(maxTokens: 256, temperature: 0.7, topP: 0.95, seed: nil))
+        #expect(GenerationPreset.precise.options == GenerationOptions(maxTokens: 256, temperature: 0.2, topP: 0.9, seed: nil))
+    }
+
+    @Test func resolvedOptionsPreferCallOverridesOverPresetDefaults() {
         let configuration = LocalModelConfiguration(
             modelPath: URL(filePath: "/tmp/model"),
-            defaultGenerationOptions: GenerationOptions(maxTokens: 512, temperature: 0.7, topP: 0.9, seed: 42)
+            generationPreset: .balanced
         )
-        let overrides = GenerationOptions(maxTokens: 64, temperature: nil, topP: 0.8, seed: nil)
+        let overrides = GenerationOptions(maxTokens: 64, temperature: nil, topP: 0.8, seed: 42)
 
         let resolved = overrides.resolved(using: configuration)
 
@@ -18,12 +24,19 @@ struct GenerationOptionsTests {
         #expect(resolved.seed == 42)
     }
 
-    @Test func configurationDefaultsAreDeterministic() {
+    @Test func configurationDefaultsToBalancedPreset() {
         let configuration = LocalModelConfiguration(modelPath: URL(filePath: "/tmp/model"))
 
-        #expect(configuration.defaultGenerationOptions.maxTokens == 256)
-        #expect(configuration.defaultGenerationOptions.temperature == 0.7)
-        #expect(configuration.defaultGenerationOptions.topP == 1.0)
-        #expect(configuration.defaultGenerationOptions.seed == nil)
+        #expect(configuration.generationPreset == .balanced)
+        #expect(configuration.generationPreset.options == GenerationOptions(maxTokens: 256, temperature: 0.7, topP: 0.95, seed: nil))
+    }
+
+    @Test func configurationEqualityIncludesGenerationPreset() {
+        let modelPath = URL(filePath: "/tmp/model")
+
+        #expect(
+            LocalModelConfiguration(modelPath: modelPath, generationPreset: .fast) !=
+            LocalModelConfiguration(modelPath: modelPath, generationPreset: .precise)
+        )
     }
 }
