@@ -2,9 +2,33 @@ import Foundation
 import MLX
 import MLXLMCommon
 
-struct MLXLoadedModel: LoadedModel {
+protocol PromptPreparingLoadedModel: LoadedModel {
+    var modelDirectory: URL { get }
+    func prepareChatInput(prompt: String) async throws -> LMInput
+    func encodePlainTextPrompt(_ prompt: String) async -> [Int]
+}
+
+protocol PlainTextLMInputBuilding: Sendable {
+    func makeInput(tokens: [Int]) throws -> LMInput
+}
+
+struct DefaultPlainTextLMInputBuilder: PlainTextLMInputBuilding {
+    func makeInput(tokens: [Int]) throws -> LMInput {
+        LMInput(tokens: MLXArray(tokens))
+    }
+}
+
+struct MLXLoadedModel: PromptPreparingLoadedModel {
     let container: ModelContainer
     let modelDirectory: URL
+
+    func prepareChatInput(prompt: String) async throws -> LMInput {
+        try await container.prepare(input: UserInput(prompt: prompt))
+    }
+
+    func encodePlainTextPrompt(_ prompt: String) async -> [Int] {
+        await container.encode(prompt)
+    }
 }
 
 struct MLXModelEngine: ModelEngine {
@@ -15,8 +39,22 @@ struct MLXModelEngine: ModelEngine {
 }
 
 struct MLXGenerator: Generating {
-    private let metadataReader = ContextWindowMetadataReader()
-    private let tokenBudgetValidator = TokenBudgetValidator()
+    private let metadataReader: ContextWindowMetadataReader
+    private let promptPreparationModeReader: PromptPreparationModeReader
+    private let tokenBudgetValidator: TokenBudgetValidator
+    private let plainTextInputBuilder: any PlainTextLMInputBuilding
+
+    init(
+        metadataReader: ContextWindowMetadataReader = ContextWindowMetadataReader(),
+        promptPreparationModeReader: PromptPreparationModeReader = PromptPreparationModeReader(),
+        tokenBudgetValidator: TokenBudgetValidator = TokenBudgetValidator(),
+        plainTextInputBuilder: any PlainTextLMInputBuilding = DefaultPlainTextLMInputBuilder()
+    ) {
+        self.metadataReader = metadataReader
+        self.promptPreparationModeReader = promptPreparationModeReader
+        self.tokenBudgetValidator = tokenBudgetValidator
+        self.plainTextInputBuilder = plainTextInputBuilder
+    }
 
     func generate(
         using model: any LoadedModel,
@@ -77,14 +115,20 @@ struct MLXGenerator: Generating {
         }
     }
 
-    private func preparedInput(
+    func preparedInput(
         for prompt: String,
         options: EffectiveGenerationOptions,
         configuration: LocalModelConfiguration,
-        model: MLXLoadedModel
+        model: any PromptPreparingLoadedModel
     ) async throws -> LMInput {
-        let input = UserInput(prompt: prompt)
-        let prepared = try await model.container.prepare(input: input)
+        let prepared: LMInput
+        switch promptPreparationModeReader.mode(for: model.modelDirectory) {
+        case .chatTemplateAvailable:
+            prepared = try await model.prepareChatInput(prompt: prompt)
+        case .plainText:
+            let tokens = await model.encodePlainTextPrompt(prompt)
+            prepared = try plainTextInputBuilder.makeInput(tokens: tokens)
+        }
         let availableContextWindow = metadataReader.effectiveContextWindow(modelDirectory: model.modelDirectory)
 
         try tokenBudgetValidator.validate(

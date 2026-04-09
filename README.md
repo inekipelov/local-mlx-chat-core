@@ -130,6 +130,11 @@ That directory should include the files expected by `mlx-swift-lm`, typically in
 - model config files
 - generation/chat template metadata when provided by the model package
 
+If a model directory does not include chat-template metadata, `LocalMLXChatCore`
+falls back to plain-text prompting. This is supported for base text-generation
+models, but chat-optimized instruct models should include chat-template metadata
+for best assistant-style results.
+
 `LocalMLXChatCore` performs a best-effort context-window validation before generation. It uses `config.json` metadata when available and skips preflight context validation when the model metadata does not expose a usable limit.
 
 The package also applies a built-in internal truthfulness instruction layer before inference to reduce made-up factual answers without changing the public API.
